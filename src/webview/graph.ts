@@ -1,4 +1,5 @@
 import type { FetchView, GraphState, ToGraph } from '../shared/protocol';
+import { curvePoints } from '../graph/curve';
 import type { GraphEdge, GraphModel } from '../graph/types';
 import { avatarColor, badgeEl, el, fullDate, ICON, initials, palette, relativeShort } from './shared';
 
@@ -118,25 +119,18 @@ function showNotice(text: string) {
 
 const r2 = (v: number) => Math.round(v * 100) / 100;
 
-// Curve handles, as a share of the curve's height. Where a lane change meets a straight lane line the bend
-// is in plain sight, so that end gets the long handle and turns gently; the end on a commit dot gets a short
-// one, its tighter turn hidden under the dot. Together they stay under the monotone limit, so no overshoot.
-const LANE_HANDLE = 1.1;
-const DOT_HANDLE = 0.25;
-
 function edgePath(e: GraphEdge, n: number): string {
   const yi = (e.i + 0.5) * G.H;
   const yj = e.j >= n ? n * G.H + G.H : (e.j + 0.5) * G.H;
   const x1 = laneX(e.from);
   const x2 = laneX(e.to);
   if (e.from === e.to) return `M${x1} ${r2(yi)}L${x1} ${r2(yj)}`;
-  const span = Math.min(e.span * G.H, yj - yi);
-  const y0 = e.kind === 'fork' ? yj - span : yi;
-  const y1 = y0 + span;
   // Forks run down their lane and curve into the parent's dot; merges leave the child's dot and curve into
-  // their lane. A curve spanning the whole edge has a dot at both ends.
-  const [h0, h1] = span >= yj - yi ? [0.5, 0.5] : e.kind === 'fork' ? [LANE_HANDLE, DOT_HANDLE] : [DOT_HANDLE, LANE_HANDLE];
-  return `M${x1} ${r2(yi)}${y0 > yi ? `L${x1} ${r2(y0)}` : ''}C${x1} ${r2(y0 + h0 * span)} ${x2} ${r2(y1 - h1 * span)} ${x2} ${r2(y1)}${yj > y1 ? `L${x2} ${r2(yj)}` : ''}`;
+  // their lane. The curve's shape lives in graph/curve.ts, where the layout checks it for crossings too.
+  const pts = curvePoints(e, G.LW, G.H).map(([x, y]) => `${r2(x + G.X0)} ${r2(y)}`);
+  const top = e.kind === 'merge' ? yi : yj - e.span * G.H;
+  const bottom = e.kind === 'merge' ? yi + e.span * G.H : yj;
+  return `M${x1} ${r2(yi)}${top > yi ? `L${pts[0]}` : ''}C${pts[1]} ${pts[2]} ${pts[3]}${yj > bottom ? `L${x2} ${r2(yj)}` : ''}`;
 }
 
 function renderMessage(): boolean {
@@ -168,13 +162,13 @@ function renderGraph(model: GraphModel) {
       for (let r = e.i; r <= end; r++) mark(r, e.from);
       continue;
     }
+    // A curve may be several rows tall; every row it passes through is held to its outer lane.
     const hi = Math.max(e.from, e.to);
     if (e.kind === 'fork') {
       for (let r = e.i; r < end; r++) mark(r, e.from);
-      mark(end - 1, hi);
-      mark(end, hi);
+      for (let r = Math.max(e.i, Math.floor(e.j - e.span)); r <= end; r++) mark(r, hi);
     } else {
-      mark(e.i, hi);
+      for (let r = e.i; r <= Math.min(end, Math.ceil(e.i + e.span)); r++) mark(r, hi);
       for (let r = e.i + 1; r <= end; r++) mark(r, e.to);
     }
   }

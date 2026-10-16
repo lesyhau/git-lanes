@@ -4,6 +4,7 @@ import { buildModel } from '../src/graph/model';
 import { layoutProblems } from '../src/graph/layout';
 import { assignChains } from '../src/graph/chains';
 import { RawCommit, RawRef, RepoSnapshot } from '../src/graph/types';
+import { curvePoints, curveRows, sampleCurve } from '../src/graph/curve';
 
 let clock = 2_000_000_000;
 function commit(hash: string, parents: string[], subject = hash): RawCommit {
@@ -261,4 +262,43 @@ test('large history solves within budget with bounded width', () => {
   assert.ok(Date.now() - t0 < 3000, `took ${Date.now() - t0}ms`);
   assert.equal(laneOf(model, 'm0'), 0);
   assert.ok(model.maxLane < 12, `maxLane ${model.maxLane}`);
+});
+
+/** Every lane change keeps clear of the dots it passes (side-view proportions, dot radius 6px). */
+function assertCurvesMissDots(model: ReturnType<typeof buildModel>['model']) {
+  const W = 22;
+  const H = 28;
+  for (const e of model.edges) {
+    if (e.from === e.to) continue;
+    const pts = sampleCurve(curvePoints(e, W, H), 64);
+    for (let r = e.i + 1; r < e.j && r < model.commits.length; r++) {
+      const x = model.commits[r].lane * W;
+      const y = (r + 0.5) * H;
+      const d = Math.min(...pts.map((p) => Math.hypot(p[0] - x, p[1] - y)));
+      assert.ok(d >= 7, `${e.kind} ${e.i}->${e.j} (lanes ${e.from}->${e.to}) passes ${d.toFixed(1)}px from the dot in row ${r}`);
+    }
+  }
+}
+
+test('lane changes grow taller with the lanes they cross, within their edge', () => {
+  assert.equal(curveRows(1, 10), 1.5);
+  assert.equal(curveRows(4, 10), 3);
+  assert.equal(curveRows(4, 2), 2);
+  const { model } = buildModel(mockSnapshot(), { filter: 'all' });
+  for (const e of model.edges) if (e.from !== e.to) assert.ok(e.span > 0 && e.span <= e.j - e.i, `span ${e.span} for ${e.i}->${e.j}`);
+});
+
+test('lane changes keep clear of the dots they pass', () => {
+  assertCurvesMissDots(buildModel(mockSnapshot(), { filter: 'all' }).model);
+  assertCurvesMissDots(buildModel(largeSnapshot(), { filter: 'all', budgetMs: 300 }).model);
+  // Three branches off one commit, the innermost with a commit just above it: the outer curves must pass it.
+  const commits = [commit('x', ['m']), commit('y', ['m']), commit('z', ['m']), commit('m', [])];
+  const snap: RepoSnapshot = {
+    commits,
+    refs: [ref('refs/remotes/origin/main', 'm'), ref('refs/remotes/origin/x', 'x'), ref('refs/remotes/origin/y', 'y'), ref('refs/remotes/origin/z', 'z')],
+    remotes: ['origin'],
+    originHead: 'main',
+    truncated: false,
+  };
+  assertCurvesMissDots(buildModel(snap, { filter: 'all' }).model);
 });
