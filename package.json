@@ -1,0 +1,270 @@
+{
+  "name": "git-lanes",
+  "displayName": "Git Lanes",
+  "description": "A clean git branch graph in the Explorer: default branch on the left, every branch in its own lane, remote and local at a glance, with manual and automatic fetch.",
+  "version": "0.2.0",
+  "publisher": "lesyhau",
+  "author": {
+    "name": "Le Sy Hau"
+  },
+  "license": "MIT",
+  "icon": "media/icon.png",
+  "galleryBanner": {
+    "color": "#1f2328",
+    "theme": "dark"
+  },
+  "pricing": "Free",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lesyhau/git-lanes.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lesyhau/git-lanes/issues"
+  },
+  "homepage": "https://github.com/lesyhau/git-lanes#readme",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "SCM Providers",
+    "Visualization"
+  ],
+  "keywords": [
+    "git",
+    "graph",
+    "git graph",
+    "branch",
+    "branches",
+    "log",
+    "history",
+    "fetch"
+  ],
+  "extensionDependencies": [
+    "vscode.git"
+  ],
+  "activationEvents": [
+    "workspaceContains:.git"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "views": {
+      "explorer": [
+        {
+          "type": "webview",
+          "id": "gitLanes.view",
+          "name": "Git Lanes",
+          "contextualTitle": "Git Lanes",
+          "initialSize": 3
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "gitLanes.fetch",
+        "title": "Fetch",
+        "category": "Git Lanes",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "gitLanes.fetching",
+        "title": "Fetching…",
+        "category": "Git Lanes",
+        "icon": "$(loading~spin)",
+        "enablement": "false"
+      },
+      {
+        "command": "gitLanes.openInEditor",
+        "title": "Open Graph in Editor",
+        "category": "Git Lanes",
+        "icon": "$(link-external)"
+      },
+      {
+        "command": "gitLanes.refresh",
+        "title": "Refresh",
+        "category": "Git Lanes",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "gitLanes.toggleRemoteOnly",
+        "title": "Toggle Remote Branches Only",
+        "category": "Git Lanes"
+      },
+      {
+        "command": "gitLanes.toggleAutoFetch",
+        "title": "Toggle Auto Fetch",
+        "category": "Git Lanes"
+      },
+      {
+        "command": "gitLanes.selectRepository",
+        "title": "Select Repository…",
+        "category": "Git Lanes"
+      },
+      {
+        "command": "gitLanes.openCommit",
+        "title": "Open Commit Details",
+        "category": "Git Lanes"
+      },
+      {
+        "command": "gitLanes.copyHash",
+        "title": "Copy Commit Hash",
+        "category": "Git Lanes"
+      },
+      {
+        "command": "gitLanes.checkout",
+        "title": "Checkout…",
+        "category": "Git Lanes"
+      },
+      {
+        "command": "gitLanes.createBranch",
+        "title": "Create Branch Here…",
+        "category": "Git Lanes"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "gitLanes.fetch",
+          "when": "view == gitLanes.view && !gitLanes.fetching",
+          "group": "navigation@1"
+        },
+        {
+          "command": "gitLanes.fetching",
+          "when": "view == gitLanes.view && gitLanes.fetching",
+          "group": "navigation@1"
+        },
+        {
+          "command": "gitLanes.openInEditor",
+          "when": "view == gitLanes.view",
+          "group": "navigation@2"
+        },
+        {
+          "command": "gitLanes.refresh",
+          "when": "view == gitLanes.view",
+          "group": "1_view@1"
+        },
+        {
+          "command": "gitLanes.toggleRemoteOnly",
+          "when": "view == gitLanes.view",
+          "group": "1_view@2"
+        },
+        {
+          "command": "gitLanes.toggleAutoFetch",
+          "when": "view == gitLanes.view",
+          "group": "1_view@3"
+        },
+        {
+          "command": "gitLanes.selectRepository",
+          "when": "view == gitLanes.view && gitLanes.multipleRepos",
+          "group": "1_view@4"
+        }
+      ],
+      "webview/context": [
+        {
+          "command": "gitLanes.openCommit",
+          "when": "webviewSection == 'commit'",
+          "group": "1_open@1"
+        },
+        {
+          "command": "gitLanes.checkout",
+          "when": "webviewSection == 'commit'",
+          "group": "2_branch@1"
+        },
+        {
+          "command": "gitLanes.createBranch",
+          "when": "webviewSection == 'commit'",
+          "group": "2_branch@2"
+        },
+        {
+          "command": "gitLanes.copyHash",
+          "when": "webviewSection == 'commit'",
+          "group": "3_copy@1"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "gitLanes.fetching",
+          "when": "false"
+        },
+        {
+          "command": "gitLanes.openCommit",
+          "when": "false"
+        },
+        {
+          "command": "gitLanes.copyHash",
+          "when": "false"
+        },
+        {
+          "command": "gitLanes.checkout",
+          "when": "false"
+        },
+        {
+          "command": "gitLanes.createBranch",
+          "when": "false"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Git Lanes",
+      "properties": {
+        "gitLanes.autoFetch.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Fetch automatically: when the graph becomes visible, when the window regains focus, after local git activity, and on an interval while the window is focused."
+        },
+        "gitLanes.autoFetch.intervalMinutes": {
+          "type": "number",
+          "default": 5,
+          "minimum": 1,
+          "description": "Minutes between interval fetches while the window is focused and the graph is visible."
+        },
+        "gitLanes.autoFetch.onWindowFocus": {
+          "type": "boolean",
+          "default": true,
+          "description": "Fetch when the VS Code window regains focus and the last fetch is more than 2 minutes old."
+        },
+        "gitLanes.autoFetch.onLocalActivity": {
+          "type": "boolean",
+          "default": true,
+          "description": "Fetch a few seconds after local git activity (commit, checkout, pull, push, branch changes)."
+        },
+        "gitLanes.fetch.prune": {
+          "type": "boolean",
+          "default": true,
+          "description": "Remove remote-tracking branches that no longer exist on the remote when fetching."
+        },
+        "gitLanes.defaultBranch": {
+          "type": "string",
+          "default": "",
+          "description": "Branch pinned to the far-left lane. Leave empty to use origin/HEAD, then main, master, trunk or develop."
+        },
+        "gitLanes.maxCommits": {
+          "type": "number",
+          "default": 400,
+          "minimum": 50,
+          "description": "Number of commits loaded at a time. \"Load more\" at the bottom of the graph loads the next batch."
+        },
+        "gitLanes.laneColors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Custom lane colours (CSS colours), used in order and repeated. Leave empty for the built-in palette."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "node esbuild.mjs --tests && node --test \"out/test/*.test.js\"",
+    "package": "npm run build && npx --yes @vscode/vsce package --no-dependencies"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/vscode": "^1.90.0",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.6.0"
+  }
+}
