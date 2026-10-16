@@ -118,6 +118,12 @@ function showNotice(text: string) {
 
 const r2 = (v: number) => Math.round(v * 100) / 100;
 
+// Curve handles, as a share of the curve's height. Where a lane change meets a straight lane line the bend
+// is in plain sight, so that end gets the long handle and turns gently; the end on a commit dot gets a short
+// one, its tighter turn hidden under the dot. Together they stay under the monotone limit, so no overshoot.
+const LANE_HANDLE = 1.1;
+const DOT_HANDLE = 0.25;
+
 function edgePath(e: GraphEdge, n: number): string {
   const yi = (e.i + 0.5) * G.H;
   const yj = e.j >= n ? n * G.H + G.H : (e.j + 0.5) * G.H;
@@ -127,8 +133,10 @@ function edgePath(e: GraphEdge, n: number): string {
   const span = Math.min(e.span * G.H, yj - yi);
   const y0 = e.kind === 'fork' ? yj - span : yi;
   const y1 = y0 + span;
-  const m = (y0 + y1) / 2;
-  return `M${x1} ${r2(yi)}${y0 > yi ? `L${x1} ${r2(y0)}` : ''}C${x1} ${r2(m)} ${x2} ${r2(m)} ${x2} ${r2(y1)}${yj > y1 ? `L${x2} ${r2(yj)}` : ''}`;
+  // Forks run down their lane and curve into the parent's dot; merges leave the child's dot and curve into
+  // their lane. A curve spanning the whole edge has a dot at both ends.
+  const [h0, h1] = span >= yj - yi ? [0.5, 0.5] : e.kind === 'fork' ? [LANE_HANDLE, DOT_HANDLE] : [DOT_HANDLE, LANE_HANDLE];
+  return `M${x1} ${r2(yi)}${y0 > yi ? `L${x1} ${r2(y0)}` : ''}C${x1} ${r2(y0 + h0 * span)} ${x2} ${r2(y1 - h1 * span)} ${x2} ${r2(y1)}${yj > y1 ? `L${x2} ${r2(yj)}` : ''}`;
 }
 
 function renderMessage(): boolean {
