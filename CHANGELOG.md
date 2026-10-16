@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.0
 
 - Branch-offs and merges curve gently where they join a lane, however many lanes they cross. The tighter turn now sits under the commit dot, where it doesn't show, instead of a sharp hook at the lane end.
 - New lane colours from the brand set (ink, blue, sky, raspberry, amber), extended with green, violet and teal. The default branch is ink: navy on light themes, a pale tint on dark ones. Every colour is at least 3:1 against its theme's background. `gitLanes.laneColors` still overrides them.
