@@ -79,7 +79,7 @@ Issues and pull requests are welcome at [github.com/lesyhau/git-lanes](https://g
 
 ## Development
 
-Requires Node.js 20+ and git.
+Requires Node.js 22+ and git.
 
 ```sh
 npm install
