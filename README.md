@@ -24,7 +24,7 @@ Open a folder that is a git repository. The **Git Lanes** view appears at the bo
   Among the arrangements that follow these rules, the solver picks the one with the fewest crossings, then the fewest lanes, then the shortest jumps.
 
   Some crossings can't be avoided: two branches that overlap in time without one containing the other always cross once.
-- **Smooth, consistent curves.** Every branch-off and merge is the same S-curve, exactly one row tall: just above the parent for a branch-off, just below the merge commit for a merge. Curves that fan out of one commit nest instead of crossing.
+- **Smooth, consistent curves.** Every branch-off and merge is an S-curve that leaves the commit dot at an angle and bends back into its lane, with both turns in plain sight: just above the parent for a branch-off, just below the merge commit for a merge. The further a curve jumps, the taller it is, so every curve turns about as gently as one to the next lane. Curves that fan out of one commit nest instead of crossing, and a curve makes room for any commit dot it passes.
 - **The graph takes only the room it needs.** Each row's message starts right after the lines passing through that row.
 - **Remote first, local at a glance.**
 

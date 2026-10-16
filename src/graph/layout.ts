@@ -1,3 +1,4 @@
+import { CURVE_ROWS, curvePoints, curveRows, Pt, sampleCurve } from './curve';
 import { GraphEdge } from './types';
 
 export interface LayoutCommit {
@@ -112,59 +113,124 @@ interface Problems {
 }
 
 /** Lower is better. */
-function score(specs: EdgeSpec[], lanes: Map<string, number>, prev?: Map<string, number>): number {
-  const p = measure(specs, lanes, prev);
+function score(list: LayoutCommit[], specs: EdgeSpec[], lanes: Map<string, number>, prev?: Map<string, number>): number {
+  const p = measure(list, specs, lanes, prev);
   return p.cross * W_CROSS + p.maxLane * W_WIDTH + p.hops * W_HOP + p.moved * W_MOVED;
 }
 
+/** Lane width and row height of the side view, in px: the proportions the crossing check measures curves at. */
+const LANE_W = 22;
+const ROW_H = 28;
+/** Curves closer than this (px) count as touching, not crossing: the curves that fan out of one dot. */
+const TOUCH = 0.5;
+/** Radius of a commit dot, and the room a curve keeps from a dot it passes, px. */
+const DOT_R = 6;
+const CLEAR = 9;
+
 /**
- * Every lane change is drawn as one curve one row tall, so a crossing is either a curve passing a lane whose line
- * runs through that row, or two curves in the same row whose ends are in opposite order.
+ * Height of the curve for a lane change, in rows: curveRows' height, unless that would run the curve into a dot
+ * on a lane it passes. Then the nearest height that clears every such dot, a little taller or shorter.
  */
-function measure(specs: EdgeSpec[], lanes: Map<string, number>, prev?: Map<string, number>): Problems {
-  // busy[band]: lane -> chain whose line runs straight through that band (between row band and band + 1).
-  const busy: Map<number, string>[] = [];
-  const vertical = (lane: number, chain: string, from: number, to: number) => {
-    for (let b = from; b < to; b++) (busy[b] ??= new Map()).set(lane, chain);
+function fitSpan(i: number, j: number, from: number, to: number, kind: EdgeSpec['kind'], dotLane: (row: number) => number | undefined): number {
+  const rows = j - i;
+  const want = curveRows(Math.abs(from - to), rows);
+  const lo = Math.min(from, to);
+  const hi = Math.max(from, to);
+  const dots: Pt[] = [];
+  for (let r = i + 1; r < j; r++) {
+    const l = dotLane(r);
+    if (l !== undefined && l > lo && l < hi) dots.push([l * LANE_W, (r + 0.5) * ROW_H]);
+  }
+  if (!dots.length) return want;
+  const clears = (span: number) => {
+    const pts = sampleCurve(curvePoints({ i, j, from, to, kind, span }, LANE_W, ROW_H), 32);
+    return dots.every(([x, y]) => pts.every((p) => Math.hypot(p[0] - x, p[1] - y) >= CLEAR));
   };
-  type Curve = { band: number; top: number; bottom: number; chain: string };
+  const least = Math.min(1, rows);
+  for (let d = 0; d <= CURVE_ROWS + 1e-9; d += 0.1) {
+    for (const span of d ? [want + d, want - d] : [want]) if (span >= least && span <= rows && clears(span)) return span;
+  }
+  return want;
+}
+
+/** Where a curve that only moves one way along `axis` is, at `v` along that axis. */
+function along(pts: Pt[], axis: 0 | 1, v: number): number {
+  const o = 1 - axis;
+  for (let k = 1; k < pts.length; k++) {
+    const a = pts[k - 1];
+    const b = pts[k];
+    if ((v - a[axis]) * (v - b[axis]) <= 0) return a[axis] === b[axis] ? a[o] : a[o] + ((v - a[axis]) / (b[axis] - a[axis])) * (b[o] - a[o]);
+  }
+  return pts[pts.length - 1][o];
+}
+
+/**
+ * Lane changes are drawn as curves up to a few rows tall (see curve.ts), so crossings are measured on the
+ * drawn shapes: a curve crossing a lane line or passing through a dot, or two curves whose order flips.
+ */
+function measure(list: LayoutCommit[], specs: EdgeSpec[], lanes: Map<string, number>, prev?: Map<string, number>): Problems {
+  const y = (row: number) => (row + 0.5) * ROW_H;
+  // Straight lane lines, in px, by lane.
+  type Seg = { y0: number; y1: number; chain: string };
+  const byLane = new Map<number, Seg[]>();
+  const vertical = (lane: number, chain: string, y0: number, y1: number) => {
+    if (y1 < y0) return;
+    const segs = byLane.get(lane);
+    if (segs) segs.push({ y0, y1, chain });
+    else byLane.set(lane, [{ y0, y1, chain }]);
+  };
+  // A dot is a short line, so a curve through a dot counts as a crossing.
+  list.forEach((c, i) => vertical(lanes.get(c.chain)!, c.chain, y(i) - DOT_R, y(i) + DOT_R));
+  const dotLane = (row: number) => lanes.get(list[row].chain);
+  type Curve = { pts: Pt[]; lo: number; hi: number; top: number; bottom: number; chain: string };
   const curves: Curve[] = [];
   for (const e of specs) {
     const la = lanes.get(e.upper)!;
     const lb = lanes.get(e.lower)!;
-    if (la === lb) vertical(la, e.br, e.i, e.j);
-    else if (e.kind === 'fork') {
-      vertical(la, e.upper, e.i, e.j - 1);
-      curves.push({ band: e.j - 1, top: la, bottom: lb, chain: e.br });
-    } else {
-      curves.push({ band: e.i, top: la, bottom: lb, chain: e.br });
-      vertical(lb, e.lower, e.i + 1, e.j);
+    if (la === lb) {
+      vertical(la, e.br, y(e.i), y(e.j));
+      continue;
     }
+    const span = fitSpan(e.i, e.j, la, lb, e.kind, dotLane);
+    if (e.kind === 'fork') vertical(la, e.upper, y(e.i), y(e.j - span));
+    else vertical(lb, e.lower, y(e.i + span), y(e.j));
+    const pts = sampleCurve(curvePoints({ i: e.i, j: e.j, from: la, to: lb, kind: e.kind, span }, LANE_W, ROW_H));
+    curves.push({ pts, lo: Math.min(la, lb), hi: Math.max(la, lb), top: pts[0][1], bottom: pts[pts.length - 1][1], chain: e.br });
   }
   let cross = 0;
   let hops = 0;
   const pairs: [string, string][] = [];
-  const byBand = new Map<number, Curve[]>();
   for (const c of curves) {
-    hops += Math.abs(c.top - c.bottom) - 1;
-    const lo = Math.min(c.top, c.bottom);
-    const hi = Math.max(c.top, c.bottom);
-    for (const [l, chain] of busy[c.band] ?? []) {
-      if (l > lo && l < hi) {
+    hops += c.hi - c.lo - 1;
+    for (let l = c.lo + 1; l < c.hi; l++) {
+      const at = along(c.pts, 0, l * LANE_W);
+      const hit = byLane.get(l)?.find((s) => s.y0 <= at && at <= s.y1);
+      if (hit) {
         cross++;
-        pairs.push([c.chain, chain]);
+        pairs.push([c.chain, hit.chain]);
       }
     }
-    const same = byBand.get(c.band);
-    if (same) {
-      for (const o of same) {
-        if ((c.top - o.top) * (c.bottom - o.bottom) < 0) {
-          cross++;
-          pairs.push(Math.max(c.top, c.bottom) > Math.max(o.top, o.bottom) ? [c.chain, o.chain] : [o.chain, c.chain]);
-        }
+  }
+  curves.sort((a, b) => a.top - b.top);
+  for (let p = 0; p < curves.length; p++) {
+    const a = curves[p];
+    for (let q = p + 1; q < curves.length && curves[q].top < a.bottom; q++) {
+      const b = curves[q];
+      const y0 = b.top;
+      const y1 = Math.min(a.bottom, b.bottom);
+      let left = false;
+      let right = false;
+      for (const pt of [...a.pts, ...b.pts]) {
+        if (pt[1] < y0 || pt[1] > y1) continue;
+        const d = along(a.pts, 1, pt[1]) - along(b.pts, 1, pt[1]);
+        if (d > TOUCH) right = true;
+        else if (d < -TOUCH) left = true;
       }
-      same.push(c);
-    } else byBand.set(c.band, [c]);
+      if (left && right) {
+        cross++;
+        pairs.push(a.hi > b.hi ? [a.chain, b.chain] : [b.chain, a.chain]);
+      }
+    }
   }
   let maxLane = 0;
   let moved = 0;
@@ -262,7 +328,7 @@ export function assignLanes(list: LayoutCommit[], opts: LaneOptions): Map<string
   };
   const evaluate = (order: string[]) => {
     const lanes = pack(order);
-    return { lanes, order, s: score(specs, lanes, opts.prev) };
+    return { lanes, order, s: score(list, specs, lanes, opts.prev) };
   };
 
   let best = evaluate(startOrder(recentFork));
@@ -299,7 +365,7 @@ export function assignLanes(list: LayoutCommit[], opts: LaneOptions): Map<string
   while (improved && Date.now() < deadline) {
     improved = false;
     const tried = new Set<string>();
-    for (const [x, y] of measure(specs, best.lanes, opts.prev).pairs) {
+    for (const [x, y] of measure(list, specs, best.lanes, opts.prev).pairs) {
       if (Date.now() > deadline) break;
       const id = `${x}\n${y}`;
       if (x === y || x === opts.mainKey || y === opts.mainKey || tried.has(id)) continue;
@@ -346,21 +412,18 @@ export function assignLanes(list: LayoutCommit[], opts: LaneOptions): Map<string
 
 /** Edges to draw for `list` (which may be a filtered subset of the list lanes were solved on). */
 export function layoutEdges(list: LayoutCommit[], lanes: Map<string, number>): GraphEdge[] {
-  return edgeSpecs(list).map((s) => ({
-    i: s.i,
-    j: s.j,
-    from: lanes.get(s.upper) ?? 0,
-    to: lanes.get(s.lower) ?? 0,
-    kind: s.kind,
-    color: lanes.get(s.br) ?? 0,
-    local: s.local,
-    // Every lane change is one row tall: forks curve in just above the parent, merges curve out just below.
-    span: 1,
-  }));
+  const dotLane = (row: number) => lanes.get(list[row].chain) ?? 0;
+  return edgeSpecs(list).map((s) => {
+    const from = lanes.get(s.upper) ?? 0;
+    const to = lanes.get(s.lower) ?? 0;
+    // Forks curve in above the parent, merges curve out below the merge; the further the jump, the taller.
+    const span = from === to ? 0 : fitSpan(s.i, s.j, from, to, s.kind, dotLane);
+    return { i: s.i, j: s.j, from, to, kind: s.kind, color: lanes.get(s.br) ?? 0, local: s.local, span };
+  });
 }
 
 /** Line crossings and extra lanes jumped in a layout. */
 export function layoutProblems(list: LayoutCommit[], lanes: Map<string, number>): { cross: number; hops: number } {
-  const p = measure(edgeSpecs(list), lanes);
+  const p = measure(list, edgeSpecs(list), lanes);
   return { cross: p.cross, hops: p.hops };
 }
