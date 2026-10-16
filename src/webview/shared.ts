@@ -16,9 +16,12 @@ export const ICON = {
   push: '<svg class="i" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 13.5V5M4.5 8.5 8 5l3.5 3.5M3 2.5h10"/></svg>',
 };
 
-// Eight lane colours, ordered so neighbouring lanes differ in hue and lightness.
-const DARK = ['#b18cff', '#2ed3a0', '#ff6b8b', '#ffc145', '#4cc9f0', '#ff9f5a', '#9ee35d', '#f78fd1'];
-const LIGHT = ['#7c4ddb', '#0a8a64', '#d1335b', '#a86f00', '#0a7fb0', '#c45a00', '#4c8a12', '#c2348f'];
+// Eight lane colours, ordered so neighbouring lanes differ in hue and lightness: ink, blue, amber, raspberry,
+// sky, then green, violet and teal to extend the brand set (0C2333 3376BC 91BBE5 C14D7C F4A82C). Each theme
+// keeps every colour at 3:1 or more against its background, so the ink lane turns pale on dark themes and the
+// sky and amber deepen on light ones.
+const DARK = ['#d5e1ee', '#4a8ad2', '#f4a82c', '#d65f8f', '#91bbe5', '#93c95a', '#a98be0', '#3dbfae'];
+const LIGHT = ['#0c2333', '#3376bc', '#b8730a', '#c14d7c', '#4f93d6', '#4f8a1f', '#6e4fb0', '#12877a'];
 
 export function palette(custom: string[]): string[] {
   if (custom.length) return custom;
