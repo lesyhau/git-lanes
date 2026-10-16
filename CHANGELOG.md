@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.1
 
 - Branch-offs and merges are a full S again, with both turns visible: the curve leaves the commit dot at 45° and bends back into its lane. Curves that jump further are taller (one and a half rows for the next lane, growing with the square root of the lanes crossed), so far lanes no longer hook sharply. A curve that would run into a commit dot it passes is made taller or shorter to keep clear of it.
 
