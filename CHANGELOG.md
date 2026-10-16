@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Branch-offs and merges curve gently where they join a lane, however many lanes they cross. The tighter turn now sits under the commit dot, where it doesn't show, instead of a sharp hook at the lane end.
+
 ## 0.2.0
 
 First public release.
