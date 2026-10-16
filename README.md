@@ -107,12 +107,17 @@ How it is organised:
 
 ## Releasing
 
-1. Bump `version` in `package.json` and add an entry to `CHANGELOG.md`.
-2. Commit, then tag and push: `git tag v0.2.0 && git push origin v0.2.0`.
+Work branches (`feature/`, `bugfix/`, `chore/`, `docs/` and so on) come off `dev` and merge back into it. `main` changes only through a `dev` → `main` pull request.
 
-The **Release** workflow then tests and packages the extension, attaches the `.vsix` to a GitHub Release, and publishes it:
-- to the VS Code Marketplace when the repository has a `VSCE_PAT` secret;
-- to Open VSX (VSCodium, Cursor and other editors) when it has an `OVSX_PAT` secret.
+1. On a `release/x.y.z` branch off `dev`, bump `version` in `package.json` and move the changelog's **Unreleased** entries under the new version. Merge it into `dev`.
+2. Open the `dev` → `main` pull request and merge it with a merge commit.
+3. Tag `main` and push the tag: `git tag vx.y.z && git push origin vx.y.z`.
+
+The **Release** workflow then tests and packages the extension and attaches the `.vsix` to a GitHub Release. It also publishes it, but only when the repository has the tokens:
+- to the VS Code Marketplace with a `VSCE_PAT` secret;
+- to Open VSX (VSCodium, Cursor and other editors) with an `OVSX_PAT` secret.
+
+Without them, upload the `.vsix` from the GitHub Release by hand.
 
 ## License
 
