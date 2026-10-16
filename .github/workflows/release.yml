@@ -1,6 +1,6 @@
 name: Release
 
-# Push a tag like v0.2.0 (matching package.json) to build, test, create a GitHub Release with the .vsix,
+# Push a tag like v0.3.0 on main (matching package.json) to build, test, create a GitHub Release with the .vsix,
 # and publish to the VS Code Marketplace (VSCE_PAT secret) and Open VSX (OVSX_PAT secret) when configured.
 on:
   push:
