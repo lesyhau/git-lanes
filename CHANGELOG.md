@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.4.0
 
 - Thinner lane lines and smaller commit dots.
 - The fetch status is no longer shown in the VS Code status bar. Fetch from the view title or the status at the top of the graph.
