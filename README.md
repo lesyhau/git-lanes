@@ -39,7 +39,7 @@ Open a folder that is a git repository. The **Git Lanes** view appears at the bo
 
   Remote branches are placed first. Local-only branches fill the lanes that are left. **All / Remote** hides local-only work without moving any lane.
 - **Branch and tag names sit next to the branch's latest commit dot.**
-- **Fetch** from the cloud icon in the view title, the "Fetched 2 min ago" status at the top of the graph (click it), or the status bar. While fetching, the icon turns into a spinner and the status reads "Fetching…".
+- **Fetch** from the cloud icon in the view title, or the "Fetched 2 min ago" status at the top of the graph (click it). While fetching, the icon turns into a spinner and the status reads "Fetching…".
 - **Git Lanes button in the status bar** opens the full graph in the editor area, for big repositories where the sidebar is cramped. The view's "open in editor" button does the same.
 - **The editor tab** shows a wider table with Description, Author, Date and Commit columns, plus search.
 - **Commit details** open in an editor tab: changed files (click one for a diff), parents, refs, and Checkout, Create Branch, Copy Hash and Push (for local-only commits). Right-click a commit in the graph for the same actions.
@@ -102,7 +102,7 @@ How it is organised:
   - With few branches it tries every valid order. With many, it repairs crossings one by one, then narrows the graph, within a time budget.
 - `src/graph/model.ts`: builds badges, local-only flags and the default branch, and produces the drawable model.
 - `src/fetch/policy.ts`: decides when to auto-fetch.
-- `src/controller.ts`: repository selection, refresh on ref changes, fetching and the status bar.
+- `src/controller.ts`: repository selection, refresh on ref changes, fetching and the status bar button.
 - `src/webview/*`: the graph renderer (sidebar and editor tab) and the commit details page.
 
 ## Releasing

@@ -54,9 +54,19 @@
           "id": "gitLanes.view",
           "name": "Git Lanes",
           "contextualTitle": "Git Lanes",
+          "icon": "media/logo.svg",
           "initialSize": 3
         }
       ]
+    },
+    "icons": {
+      "git-lanes-logo": {
+        "description": "Git Lanes logo",
+        "default": {
+          "fontPath": "media/logo.woff",
+          "fontCharacter": "\\E000"
+        }
+      }
     },
     "commands": [
       {

@@ -8,7 +8,7 @@ const vscode = acquireVsCodeApi();
 
 const wide = document.body.dataset.mode === 'wide';
 /** Row height, lane width, first lane x, dot sizes, and where badges start after a dot. */
-const G = wide ? { H: 34, LW: 30, X0: 20, DOT: 13, HEAD: 15, AFTER: 10, TEXT: 26 } : { H: 28, LW: 22, X0: 14, DOT: 12, HEAD: 14, AFTER: 9, TEXT: 17 };
+const G = wide ? { H: 34, LW: 30, X0: 20, DOT: 9, HEAD: 11, AFTER: 8, TEXT: 26 } : { H: 28, LW: 22, X0: 14, DOT: 8, HEAD: 10, AFTER: 7, TEXT: 17 };
 const laneX = (l: number) => G.X0 + l * G.LW;
 
 interface Saved {
@@ -219,7 +219,7 @@ function renderGraph(model: GraphModel) {
     dot.style.width = dot.style.height = `${size}px`;
     dot.style.borderColor = col;
     if (!c.local) dot.style.background = col;
-    if (c.head) dot.style.boxShadow = `0 0 0 2px var(--gg-bg), 0 0 0 4px ${col}`;
+    if (c.head) dot.style.boxShadow = `0 0 0 1.5px var(--gg-bg), 0 0 0 3px ${col}`;
     dotEls.push(dot);
     dotFrag.append(dot);
 
