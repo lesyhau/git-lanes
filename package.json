@@ -2,7 +2,7 @@
   "name": "git-lanes",
   "displayName": "Git Lanes",
   "description": "A clean git branch graph in the Explorer: default branch on the left, every branch in its own lane, remote and local at a glance, with manual and automatic fetch.",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "publisher": "lesyhau",
   "author": {
     "name": "Le Sy Hau"
