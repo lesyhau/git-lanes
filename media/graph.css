@@ -308,20 +308,20 @@ body[data-mode='wide'] .notice {
 }
 .lines path {
   fill: none;
-  stroke-width: 2.5;
+  stroke-width: 1.5;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 .lines path.dash {
-  stroke-dasharray: 3 3;
+  stroke-dasharray: 2.5 2.5;
   stroke-linecap: butt;
 }
 .dot {
   position: absolute;
   box-sizing: border-box;
-  border: 2px solid;
+  border: 1.5px solid;
   border-radius: 50%;
-  box-shadow: 0 0 0 2px var(--gg-bg);
+  box-shadow: 0 0 0 1.5px var(--gg-bg);
 }
 .dot.hollow {
   background: var(--gg-bg);

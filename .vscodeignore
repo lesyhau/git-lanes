@@ -11,3 +11,4 @@ esbuild.mjs
 tsconfig.json
 *.vsix
 .gitignore
+scripts/**

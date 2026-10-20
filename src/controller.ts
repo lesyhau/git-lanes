@@ -40,7 +40,6 @@ export class GraphController implements vscode.Disposable {
   private readonly hosts = new Set<GraphHost>();
   private readonly policies = new Map<string, AutoFetchPolicy>();
   private readonly fetchViews = new Map<string, FetchView>();
-  private readonly status: vscode.StatusBarItem;
   private readonly openItem: vscode.StatusBarItem;
 
   private repo?: Repository;
@@ -64,18 +63,14 @@ export class GraphController implements vscode.Disposable {
   ) {
     this.maxCommits = config().get<number>('maxCommits', 400);
     this.filter = ctx.workspaceState.get<Filter>(FILTER_KEY, 'all');
-    this.status = vscode.window.createStatusBarItem('gitLanes.fetch', vscode.StatusBarAlignment.Left, 50);
-    this.status.name = 'Git Lanes Fetch';
-    this.status.command = 'gitLanes.fetch';
     // In big repositories the sidebar is cramped: one click opens the full graph in the editor area.
     this.openItem = vscode.window.createStatusBarItem('gitLanes.open', vscode.StatusBarAlignment.Left, 51);
     this.openItem.name = 'Git Lanes';
-    this.openItem.text = '$(git-merge) Git Lanes';
+    this.openItem.text = '$(git-lanes-logo) Git Lanes';
     this.openItem.tooltip = 'Open the Git Lanes graph in the editor';
     this.openItem.command = 'gitLanes.openInEditor';
 
     this.disposables.push(
-      this.status,
       this.openItem,
       api.onDidOpenRepository(() => this.pickRepo()),
       api.onDidCloseRepository(() => this.pickRepo()),
@@ -93,7 +88,6 @@ export class GraphController implements vscode.Disposable {
       }),
     );
     this.tickTimer = setInterval(() => {
-      this.updateStatusBar();
       if (vscode.window.state.focused && this.anyVisible()) this.trigger('interval');
     }, TICK_MS);
     this.pickRepo();
@@ -426,42 +420,5 @@ export class GraphController implements vscode.Disposable {
   private updateStatusBar(): void {
     if (this.repo) this.openItem.show();
     else this.openItem.hide();
-    if (!this.repo || !this.snapshot?.remotes.length) {
-      this.status.hide();
-      return;
-    }
-    const v = this.fetchView();
-    const ago = v.lastFetch ? relativeTime(v.lastFetch) : undefined;
-    switch (v.status) {
-      case 'fetching':
-        this.status.text = '$(sync~spin) Fetching…';
-        break;
-      case 'auth':
-        this.status.text = '$(account) Sign in to fetch';
-        break;
-      case 'offline':
-        this.status.text = '$(debug-disconnect) Offline';
-        break;
-      case 'error':
-        this.status.text = '$(warning) Fetch failed';
-        break;
-      default:
-        this.status.text = ago ? `$(cloud-download) ${ago}` : '$(cloud-download) Fetch';
-    }
-    const auto = config().get<boolean>('autoFetch.enabled', true);
-    const tip = new vscode.MarkdownString();
-    tip.appendMarkdown(`**Git Lanes** — ${v.message ? v.message : ago ? `last fetched ${ago}` : 'not fetched yet'}\n\n`);
-    tip.appendMarkdown(auto ? 'Auto-fetch is on: when the graph is shown, on window focus, after local git activity, and on an interval.\n\n' : 'Auto-fetch is off.\n\n');
-    tip.appendMarkdown('Click to fetch all remotes now.');
-    this.status.tooltip = tip;
-    this.status.show();
   }
-}
-
-export function relativeTime(ms: number): string {
-  const s = Math.max(0, Math.round((Date.now() - ms) / 1000));
-  if (s < 45) return 'just now';
-  if (s < 3600) return `${Math.max(1, Math.round(s / 60))} min ago`;
-  if (s < 86400) return `${Math.round(s / 3600)} h ago`;
-  return `${Math.round(s / 86400)} d ago`;
 }
