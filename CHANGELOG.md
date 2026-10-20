@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.0
+
+- Thinner lane lines and smaller commit dots.
+- The fetch status is no longer shown in the VS Code status bar. Fetch from the view title or the status at the top of the graph.
+- New icon based on Lucide's git-branch. It is white on dark themes and dark grey on light themes, and the Git Lanes status bar button, the view and the editor tab all use it.
+
 ## 0.3.1
 
 - Branch-offs and merges are a full S again, with both turns visible: the curve leaves the commit dot at 45° and bends back into its lane. Curves that jump further are taller (one and a half rows for the next lane, growing with the square root of the lanes crossed), so far lanes no longer hook sharply. A curve that would run into a commit dot it passes is made taller or shorter to keep clear of it.

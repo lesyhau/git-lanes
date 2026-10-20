@@ -124,8 +124,8 @@ const ROW_H = 28;
 /** Curves closer than this (px) count as touching, not crossing: the curves that fan out of one dot. */
 const TOUCH = 0.5;
 /** Radius of a commit dot, and the room a curve keeps from a dot it passes, px. */
-const DOT_R = 6;
-const CLEAR = 9;
+const DOT_R = 4;
+const CLEAR = 7;
 
 /**
  * Height of the curve for a lane change, in rows: curveRows' height, unless that would run the curve into a dot

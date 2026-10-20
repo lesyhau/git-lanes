@@ -58,7 +58,10 @@ export class GraphPanel {
 
   private constructor(extensionUri: vscode.Uri, controller: GraphController) {
     this.panel = vscode.window.createWebviewPanel('gitLanes.panel', 'Git Lanes', vscode.ViewColumn.Active, webviewOptions(extensionUri));
-    this.panel.iconPath = new vscode.ThemeIcon('git-merge');
+    this.panel.iconPath = {
+      light: vscode.Uri.joinPath(extensionUri, 'media', 'logo-light.svg'),
+      dark: vscode.Uri.joinPath(extensionUri, 'media', 'logo-dark.svg'),
+    };
     this.panel.webview.html = webviewHtml(this.panel.webview, extensionUri, { script: 'graph.js', style: 'graph.css', title: 'Git Lanes', mode: 'wide' });
     const panel = this.panel;
     const host: GraphHost = {

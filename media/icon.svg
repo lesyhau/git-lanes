@@ -1,13 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
-  <!-- Git Lanes icon: two lanes; a branch curves out of a commit on the default lane into its own lane. -->
-  <rect width="256" height="256" rx="56" fill="#1f2328"/>
-  <g fill="none" stroke="#ffffff" stroke-width="16" stroke-linecap="round">
-    <path d="M84 40 V216"/>
-    <path d="M84 196 C84 144 172 160 172 108 V40"/>
-  </g>
-  <g fill="#ffffff" stroke="#1f2328" stroke-width="8">
-    <circle cx="84" cy="76" r="22"/>
-    <circle cx="84" cy="196" r="22"/>
-    <circle cx="172" cy="76" r="22"/>
-  </g>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="-3 -3 30 30" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="-3" y="-3" width="30" height="30" rx="6.5" fill="#1f2328" stroke="none"/><line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
