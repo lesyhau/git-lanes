@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- The extension icon's tile is now Proxyma teal: a diagonal gradient from the brand ramp with a soft sheen, behind the same white git-branch glyph.
+- The README covers using the extension only. Building, testing and releasing moved to CONTRIBUTING.md.
+
 ## 0.4.0
 
 - Thinner lane lines and smaller commit dots.
