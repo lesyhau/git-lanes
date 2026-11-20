@@ -27,6 +27,8 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<TestApi | 
     vscode.commands.registerCommand('gitLanes.openInEditor', () => GraphPanel.show(ctx.extensionUri, controller)),
     vscode.commands.registerCommand('gitLanes.refresh', () => controller.load()),
     vscode.commands.registerCommand('gitLanes.toggleRemoteOnly', () => controller.toggleFilter()),
+    vscode.commands.registerCommand('gitLanes.showOtherRemotes', () => setOtherRemotes(true)),
+    vscode.commands.registerCommand('gitLanes.hideOtherRemotes', () => setOtherRemotes(false)),
     vscode.commands.registerCommand('gitLanes.selectRepository', () => controller.selectRepository()),
     vscode.commands.registerCommand('gitLanes.toggleAutoFetch', async () => {
       const c = vscode.workspace.getConfiguration('gitLanes');
@@ -54,6 +56,12 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<TestApi | 
     }),
   );
   return { controller };
+}
+
+/** Branches of other remotes are a per-repository choice, so it is saved in the workspace when there is one. */
+async function setOtherRemotes(show: boolean): Promise<void> {
+  const target = vscode.workspace.workspaceFolders?.length ? vscode.ConfigurationTarget.Workspace : vscode.ConfigurationTarget.Global;
+  await vscode.workspace.getConfiguration('gitLanes').update('otherRemotes', show, target);
 }
 
 export function deactivate(): void {}

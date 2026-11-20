@@ -161,6 +161,8 @@ function buildBadges(snap: RepoSnapshot, primary: string | undefined, byFull: Ma
         title = `Local branch ${h.name} — ${parts.join(', ') || 'differs from'} ${up.remote}/${up.name}`;
       } else if (h.gone) {
         title = `Local branch ${h.name} — its upstream no longer exists`;
+      } else if (h.upstream) {
+        title = `Local branch ${h.name} — tracks ${h.upstream.replace(/^refs\/remotes\//, '')}, a hidden remote`;
       } else {
         title = `Local branch ${h.name} — not pushed (no upstream)`;
       }

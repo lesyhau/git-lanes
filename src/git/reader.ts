@@ -7,7 +7,12 @@ export const EMPTY_TREE = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
 
 const optional = (p: Promise<string>) => p.then((s) => s.trim() || undefined).catch(() => undefined);
 
-export async function readSnapshot(git: GitRunner, maxCommits: number): Promise<RepoSnapshot> {
+export interface ReadOptions {
+  /** Include branches of remotes other than the primary one (origin, else the first remote). */
+  otherRemotes: boolean;
+}
+
+export async function readSnapshot(git: GitRunner, maxCommits: number, opts: ReadOptions = { otherRemotes: true }): Promise<RepoSnapshot> {
   const [remotesOut, refsOut, headHash, headRef] = await Promise.all([
     git.run(['remote']),
     git.run(['for-each-ref', '--format=%(refname)%1f%(objectname)%1f%(*objectname)%1f%(upstream)%1f%(upstream:track,nobracket)%1f%(symref)', 'refs/heads', 'refs/remotes', 'refs/tags']),
@@ -15,8 +20,12 @@ export async function readSnapshot(git: GitRunner, maxCommits: number): Promise<
     optional(git.run(['symbolic-ref', '-q', 'HEAD'])),
   ]);
   const remotes = remotesOut.split('\n').map((s) => s.trim()).filter(Boolean);
-  const { refs, symrefs } = parseRefs(refsOut, remotes);
   const primary = remotes.includes('origin') ? 'origin' : remotes[0];
+  const parsed = parseRefs(refsOut, remotes);
+  const { symrefs } = parsed;
+  // Hiding other remotes (a fork, a mirror, upstream) drops their branches and the commits only they reach.
+  const onlyPrimary = !opts.otherRemotes && remotes.length > 1;
+  const refs = onlyPrimary ? parsed.refs.filter((r) => r.kind !== 'remote' || r.remote === primary) : parsed.refs;
   const originHeadTarget = primary ? symrefs.get(`refs/remotes/${primary}/HEAD`) : undefined;
   const originHead = originHeadTarget?.startsWith(`refs/remotes/${primary}/`) ? originHeadTarget.slice(`refs/remotes/${primary}/`.length) : undefined;
 
@@ -28,7 +37,7 @@ export async function readSnapshot(git: GitRunner, maxCommits: number): Promise<
       'log.showSignature=false',
       'log',
       '--branches',
-      '--remotes',
+      onlyPrimary ? `--remotes=${primary}` : '--remotes',
       '--tags',
       ...(headHash ? ['HEAD'] : []),
       '--date-order',
