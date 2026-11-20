@@ -99,3 +99,42 @@ test('empty repository reads without errors', async () => {
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test('hiding other remotes drops their branches and the commits only they reach', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'git-lanes-'));
+  try {
+    const origin = join(dir, 'origin.git');
+    const fork = join(dir, 'fork.git');
+    const work = join(dir, 'work');
+    sh(dir, 'init', '--bare', '-b', 'main', origin);
+    sh(dir, 'init', '--bare', '-b', 'main', fork);
+    sh(dir, 'clone', '-q', origin, work);
+    const commit = (file: string, msg: string) => {
+      writeFileSync(join(work, file), msg + '\n');
+      sh(work, 'add', '-A');
+      sh(work, 'commit', '-q', '-m', msg);
+    };
+    commit('a.txt', 'shared');
+    sh(work, 'push', '-q', 'origin', 'main');
+    sh(work, 'remote', 'add', 'fork', fork);
+    sh(work, 'checkout', '-q', '-b', 'feature/x');
+    commit('b.txt', 'fork only');
+    sh(work, 'push', '-q', 'fork', 'feature/x');
+    sh(work, 'checkout', '-q', 'main');
+    sh(work, 'branch', '-q', '-D', 'feature/x');
+    sh(work, 'fetch', '-q', '--all');
+    const git = new GitRunner('git', work);
+
+    const all = await readSnapshot(git, 100);
+    assert.ok(all.refs.some((r) => r.kind === 'remote' && r.remote === 'fork'));
+    assert.ok(all.commits.some((c) => c.subject === 'fork only'));
+
+    const primary = await readSnapshot(git, 100, { otherRemotes: false });
+    assert.deepEqual(primary.remotes.sort(), ['fork', 'origin']);
+    assert.ok(primary.refs.every((r) => r.kind !== 'remote' || r.remote === 'origin'));
+    assert.ok(primary.refs.some((r) => r.kind === 'remote' && r.remote === 'origin'));
+    assert.deepEqual(primary.commits.map((c) => c.subject), ['shared']);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
