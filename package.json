@@ -100,6 +100,16 @@
         "category": "Git Lanes"
       },
       {
+        "command": "gitLanes.showOtherRemotes",
+        "title": "Show Other Remotes' Branches",
+        "category": "Git Lanes"
+      },
+      {
+        "command": "gitLanes.hideOtherRemotes",
+        "title": "Hide Other Remotes' Branches",
+        "category": "Git Lanes"
+      },
+      {
         "command": "gitLanes.toggleAutoFetch",
         "title": "Toggle Auto Fetch",
         "category": "Git Lanes"
@@ -158,14 +168,24 @@
           "group": "1_view@2"
         },
         {
+          "command": "gitLanes.showOtherRemotes",
+          "when": "view == gitLanes.view && gitLanes.multipleRemotes && !config.gitLanes.otherRemotes",
+          "group": "1_view@3"
+        },
+        {
+          "command": "gitLanes.hideOtherRemotes",
+          "when": "view == gitLanes.view && gitLanes.multipleRemotes && config.gitLanes.otherRemotes",
+          "group": "1_view@3"
+        },
+        {
           "command": "gitLanes.toggleAutoFetch",
           "when": "view == gitLanes.view",
-          "group": "1_view@3"
+          "group": "1_view@4"
         },
         {
           "command": "gitLanes.selectRepository",
           "when": "view == gitLanes.view && gitLanes.multipleRepos",
-          "group": "1_view@4"
+          "group": "1_view@5"
         }
       ],
       "webview/context": [
@@ -210,6 +230,14 @@
         {
           "command": "gitLanes.createBranch",
           "when": "false"
+        },
+        {
+          "command": "gitLanes.showOtherRemotes",
+          "when": "!config.gitLanes.otherRemotes"
+        },
+        {
+          "command": "gitLanes.hideOtherRemotes",
+          "when": "config.gitLanes.otherRemotes"
         }
       ]
     },
@@ -246,6 +274,11 @@
           "type": "string",
           "default": "",
           "description": "Branch pinned to the far-left lane. Leave empty to use origin/HEAD, then main, master, trunk or develop."
+        },
+        "gitLanes.otherRemotes": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show branches from every remote. Turn off to show only the primary remote (origin, or the first remote) and hide the branches of forks, mirrors or upstream added as other remotes."
         },
         "gitLanes.maxCommits": {
           "type": "number",

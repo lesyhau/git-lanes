@@ -38,6 +38,7 @@ Open a folder that is a git repository. The **Git Lanes** view appears at the bo
   | Ring around the dot, `HEAD` tag | Checked-out commit |
 
   Remote branches are placed first. Local-only branches fill the lanes that are left. **All / Remote** hides local-only work without moving any lane.
+- **Other remotes.** In a repository with more than one remote (a fork, a mirror, `upstream`), the view's `…` menu has **Hide Other Remotes' Branches** to show only the primary remote (`origin`, or the first remote), and **Show Other Remotes' Branches** to bring them back. The choice is saved per workspace (`gitLanes.otherRemotes`).
 - **Branch and tag names sit next to the branch's latest commit dot.**
 - **Fetch** from the cloud icon in the view title, or the "Fetched 2 min ago" status at the top of the graph (click it). While fetching, the icon turns into a spinner and the status reads "Fetching…".
 - **Git Lanes button in the status bar** opens the full graph in the editor area, for big repositories where the sidebar is cramped. The view's "open in editor" button does the same.
@@ -70,6 +71,7 @@ Automatic fetches never run more than once every 30 s, and they never show a cre
 | `gitLanes.autoFetch.onLocalActivity` | `true` | Fetch after local git activity |
 | `gitLanes.fetch.prune` | `true` | Remove remote-tracking branches deleted on the remote |
 | `gitLanes.defaultBranch` | `""` | Branch pinned to the left lane |
+| `gitLanes.otherRemotes` | `true` | Show branches from every remote; off shows only `origin` (or the first remote) |
 | `gitLanes.maxCommits` | `400` | Commits per batch ("Load more" loads the next batch) |
 | `gitLanes.laneColors` | `[]` | Custom lane colours, used in order |
 

@@ -300,7 +300,7 @@ export class GraphController implements vscode.Disposable {
       return;
     }
     try {
-      const snap = await readSnapshot(runner, this.maxCommits);
+      const snap = await readSnapshot(runner, this.maxCommits, { otherRemotes: config().get<boolean>('otherRemotes', true) });
       if (repo !== this.repo) return;
       const key = repo.rootUri.fsPath;
       const stored = this.ctx.workspaceState.get<Record<string, Record<string, number>>>(LANES_KEY, {});
@@ -313,6 +313,7 @@ export class GraphController implements vscode.Disposable {
       void this.ctx.workspaceState.update(LANES_KEY, { ...stored, [key]: Object.fromEntries(lanes) });
       this.snapshot = snap;
       this.model = model;
+      void vscode.commands.executeCommand('setContext', 'gitLanes.multipleRemotes', snap.remotes.length > 1);
       this.loadError = undefined;
     } catch (e) {
       if (repo !== this.repo) return;
