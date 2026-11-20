@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.5.0
 
 - Hide the branches of other remotes (a fork, a mirror, `upstream`) and show only `origin`, or the first remote: **Hide Other Remotes' Branches** in the view's `…` menu, shown when the repository has more than one remote. The new `gitLanes.otherRemotes` setting holds the choice per workspace.
 - New extension icon without a tile: the git-branch glyph itself in colour, a teal trunk and an amber branch, so it reads on light and dark themes alike.
